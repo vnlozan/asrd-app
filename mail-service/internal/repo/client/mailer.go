@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/vanng822/go-premailer/premailer"
-	mail "github.com/xhit/go-simple-mail/v2"
+	simpleMailV2 "github.com/xhit/go-simple-mail/v2"
 )
 
 type MailerClient struct {
@@ -65,7 +65,7 @@ func (m *MailerClient) SendSMTPMessage(msg dto.Message) error {
 		return err
 	}
 
-	server := mail.NewSMTPClient()
+	server := simpleMailV2.NewSMTPClient()
 	server.Host = m.Host
 	server.Port = m.Port
 	server.Username = m.Username
@@ -81,13 +81,13 @@ func (m *MailerClient) SendSMTPMessage(msg dto.Message) error {
 		return err
 	}
 
-	email := mail.NewMSG()
+	email := simpleMailV2.NewMSG()
 	email.SetFrom(msg.From).
 		AddTo(msg.To).
 		SetSubject(msg.Subject)
 
-	email.SetBody(mail.TextPlain, plainMessage)
-	email.AddAlternative(mail.TextHTML, formattedMessage)
+	email.SetBody(simpleMailV2.TextPlain, plainMessage)
+	email.AddAlternative(simpleMailV2.TextHTML, formattedMessage)
 
 	if len(msg.Attachments) > 0 {
 		for _, x := range msg.Attachments {
@@ -164,15 +164,15 @@ func (m *MailerClient) inlineCSS(s string) (string, error) {
 	return html, nil
 }
 
-func (m *MailerClient) getEncryption(s string) mail.Encryption {
+func (m *MailerClient) getEncryption(s string) simpleMailV2.Encryption {
 	switch s {
 	case "tls":
-		return mail.EncryptionSTARTTLS
+		return simpleMailV2.EncryptionSTARTTLS
 	case "ssl":
-		return mail.EncryptionSSLTLS
+		return simpleMailV2.EncryptionSSLTLS
 	case "none", "":
-		return mail.EncryptionNone
+		return simpleMailV2.EncryptionNone
 	default:
-		return mail.EncryptionSTARTTLS
+		return simpleMailV2.EncryptionSTARTTLS
 	}
 }
