@@ -7,14 +7,12 @@ import (
 	"mailer-service/internal/server"
 )
 
-const webPort = "8080"
-
 func main() {
 	mailer := client.NewMailerClient()
 	mailController := controller.MailController{Mailer: &mailer}
 
 	server := server.NewServer(
-		config.Config{Port: webPort},
+		*config.NewConfig(),
 		mailController,
 	)
 	server.Start()
