@@ -1,8 +1,0 @@
-FROM alpine:latest
-
-RUN mkdir /app
-
-COPY mailerApp /app
-COPY assets /assets
-
-CMD [ "/app/mailerApp"]
