@@ -7,9 +7,13 @@ import (
 	"net/http"
 )
 
+const (
+	TEMPLATES_PATH = "../../assets/templates"
+)
+
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		render(w, "test.page.gohtml")
+		render(w, TEMPLATES_PATH+"/test.page.gohtml")
 	})
 
 	fmt.Println("Starting front end service on port 80")
@@ -20,19 +24,15 @@ func main() {
 }
 
 func render(w http.ResponseWriter, t string) {
-
 	partials := []string{
-		"./cmd/web/templates/base.layout.gohtml",
-		"./cmd/web/templates/header.partial.gohtml",
-		"./cmd/web/templates/footer.partial.gohtml",
+		TEMPLATES_PATH + "/base.layout.gohtml",
+		TEMPLATES_PATH + "/header.partial.gohtml",
+		TEMPLATES_PATH + "/footer.partial.gohtml",
 	}
 
 	var templateSlice []string
-	templateSlice = append(templateSlice, fmt.Sprintf("./cmd/web/templates/%s", t))
-
-	for _, x := range partials {
-		templateSlice = append(templateSlice, x)
-	}
+	templateSlice = append(templateSlice, fmt.Sprintf(TEMPLATES_PATH+"/%s", t))
+	templateSlice = append(templateSlice, partials...)
 
 	tmpl, err := template.ParseFiles(templateSlice...)
 	if err != nil {

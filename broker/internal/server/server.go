@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 
-	"broker/config"
+	"broker/internal/config"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -72,7 +72,7 @@ func (s *Server) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 func (s *Server) logItem(w http.ResponseWriter, entry dto.LogPayload) {
 	jsonData, _ := json.MarshalIndent(entry, "", "\t")
 
-	logServiceURL := "http://logger-service/log"
+	logServiceURL := "http://logger/log"
 
 	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -109,7 +109,7 @@ func (s *Server) authenticate(w http.ResponseWriter, a dto.AuthPayload) {
 	jsonData, _ := json.MarshalIndent(a, "", "\t")
 
 	// call the service
-	request, err := http.NewRequest("POST", "http://authentication-service/authenticate", bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest("POST", "http://auth/authenticate", bytes.NewBuffer(jsonData))
 	if err != nil {
 		utils.ErrorJSON(w, err)
 		return

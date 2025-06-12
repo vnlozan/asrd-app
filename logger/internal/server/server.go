@@ -1,12 +1,11 @@
 package server
 
 import (
-	"auth/internal/controller"
 	"fmt"
 	"log"
+	"logger/internal/config"
+	"logger/internal/controller"
 	"net/http"
-
-	"auth/internal/config"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -14,25 +13,27 @@ import (
 )
 
 type Server struct {
-	Config         config.Config
-	AuthController controller.AuthController
+	Config           config.Config
+	LoggerController controller.LoggerController
 }
 
-func NewServer(config config.Config, authController controller.AuthController) *Server {
-	return &Server{Config: config, AuthController: authController}
+func NewServer(config *config.Config, loggerController *controller.LoggerController) *Server {
+	return &Server{
+		Config:           *config,
+		LoggerController: *loggerController,
+	}
 }
 
 func (s *Server) Start() {
-	log.Println("Starting on port", s.Config.Port)
-
+	log.Println("Starting service on port", s.Config.WebPort)
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", s.Config.Port),
+		Addr:    fmt.Sprintf(":%s", s.Config.WebPort),
 		Handler: s.routes(),
 	}
 
 	err := srv.ListenAndServe()
 	if err != nil {
-		log.Panic(err)
+		log.Panic()
 	}
 }
 
@@ -49,7 +50,7 @@ func (s *Server) routes() http.Handler {
 	}))
 
 	mux.Use(middleware.Heartbeat("/ping"))
+	mux.Post("/log", s.LoggerController.WriteLog)
 
-	mux.Post("/authenticate", s.AuthController.Authenticate)
 	return mux
 }

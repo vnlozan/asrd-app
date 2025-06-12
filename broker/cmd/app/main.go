@@ -1,7 +1,7 @@
 package main
 
 import (
-	"broker/config"
+	"broker/internal/config"
 	"broker/internal/server"
 )
 

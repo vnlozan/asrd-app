@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"log"
-	"mailer/config"
+	"mailer/internal/config"
 	"mailer/internal/controller"
 	"net/http"
 

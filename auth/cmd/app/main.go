@@ -1,7 +1,7 @@
 package main
 
 import (
-	"auth/config"
+	"auth/internal/config"
 	"auth/internal/controller"
 	"auth/internal/repo/pg"
 	"auth/internal/server"

@@ -1,4 +1,4 @@
-module log-service
+module logger
 
 go 1.18
 

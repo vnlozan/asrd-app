@@ -1,7 +1,7 @@
 package main
 
 import (
-	"mailer/config"
+	"mailer/internal/config"
 	"mailer/internal/controller"
 	"mailer/internal/repo/client"
 	"mailer/internal/server"
