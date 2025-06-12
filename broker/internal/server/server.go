@@ -72,7 +72,7 @@ func (s *Server) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 func (s *Server) logItem(w http.ResponseWriter, entry dto.LogPayload) {
 	jsonData, _ := json.MarshalIndent(entry, "", "\t")
 
-	logServiceURL := "http://logger/log"
+	logServiceURL := fmt.Sprintf("%s/log", s.Config.LoggerURL)
 
 	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -109,7 +109,7 @@ func (s *Server) authenticate(w http.ResponseWriter, a dto.AuthPayload) {
 	jsonData, _ := json.MarshalIndent(a, "", "\t")
 
 	// call the service
-	request, err := http.NewRequest("POST", "http://auth/authenticate", bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest("POST", fmt.Sprintf("%s/authenticate", s.Config.AuthURL), bytes.NewBuffer(jsonData))
 	if err != nil {
 		utils.ErrorJSON(w, err)
 		return
@@ -159,7 +159,7 @@ func (s *Server) sendMail(w http.ResponseWriter, msg dto.MailPayload) {
 	jsonData, _ := json.MarshalIndent(msg, "", "\t")
 
 	// call the mail service
-	mailServiceURL := "http://mailer/send"
+	mailServiceURL := fmt.Sprintf("%s/send", s.Config.MailerURL)
 
 	// post to mail service
 	request, err := http.NewRequest("POST", mailServiceURL, bytes.NewBuffer(jsonData))

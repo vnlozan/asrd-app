@@ -105,7 +105,7 @@ func (m *MailerClient) SendSMTPMessage(msg dto.Message) error {
 }
 
 func (m *MailerClient) buildHTMLMessage(msg dto.Message) (string, error) {
-	templateToRender := "../../assets/templates/mail.html.gohtml"
+	templateToRender := "./assets/templates/mail.html.gohtml"
 
 	t, err := template.New("email-html").ParseFiles(templateToRender)
 	if err != nil {
@@ -127,7 +127,7 @@ func (m *MailerClient) buildHTMLMessage(msg dto.Message) (string, error) {
 }
 
 func (m *MailerClient) buildPlainTextMessage(msg dto.Message) (string, error) {
-	templateToRender := "./templates/mail.plain.gohtml"
+	templateToRender := "./assets/templates/mail.plain.gohtml"
 
 	t, err := template.New("email-plain").ParseFiles(templateToRender)
 	if err != nil {

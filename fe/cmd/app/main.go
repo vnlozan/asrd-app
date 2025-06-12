@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fe/internal/config"
 	"fmt"
 	"html/template"
 	"log"
@@ -8,16 +9,18 @@ import (
 )
 
 const (
-	TEMPLATES_PATH = "../../assets/templates"
+	TEMPLATES_PATH = "./assets/templates"
 )
 
 func main() {
+	config := config.NewConfig()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		render(w, TEMPLATES_PATH+"/test.page.gohtml")
 	})
 
-	fmt.Println("Starting front end service on port 80")
-	err := http.ListenAndServe(":80", nil)
+	fmt.Println("Starting front end service on port ", config.Port)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -31,7 +34,7 @@ func render(w http.ResponseWriter, t string) {
 	}
 
 	var templateSlice []string
-	templateSlice = append(templateSlice, fmt.Sprintf(TEMPLATES_PATH+"/%s", t))
+	templateSlice = append(templateSlice, t)
 	templateSlice = append(templateSlice, partials...)
 
 	tmpl, err := template.ParseFiles(templateSlice...)
