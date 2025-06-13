@@ -8,13 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
+	"time"
 
 	"broker/internal/config"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Server struct {
@@ -33,7 +36,13 @@ func (s *Server) Start() {
 		Handler: s.routes(),
 	}
 
-	err := srv.ListenAndServe()
+	rabbitConn, err := connect()
+	if err != nil {
+		log.Panic(err)
+	}
+	defer rabbitConn.Close()
+
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -212,4 +221,36 @@ func (s *Server) routes() http.Handler {
 	mux.Post("/handle", s.HandleSubmission)
 
 	return mux
+}
+
+func connect() (*amqp.Connection, error) {
+	var counts int64 = 0
+	var backOff = 1 * time.Second
+	var connection *amqp.Connection = nil
+
+	for {
+		c, err := amqp.Dial("amqp://guest:guest@rabbitmq")
+		if err == nil {
+			log.Println("Connected to RabbitMQ")
+			connection = c
+			break
+		}
+
+		log.Println("RabbitMQ not yet ready...")
+
+		if counts > 5 {
+			log.Println(err)
+			return nil, err
+		}
+
+		backOff = time.Duration(math.Pow(float64(counts), 2)) * time.Second
+		log.Println("backing off...")
+		time.Sleep(backOff)
+
+		counts++
+
+		continue
+	}
+
+	return connection, nil
 }

@@ -1,8 +1,13 @@
 package config
 
-import "broker/internal/utils"
+import (
+	"broker/internal/utils"
+
+	"github.com/rabbitmq/amqp091-go"
+)
 
 type Config struct {
+	Rabbit    *amqp091.Connection
 	Port      string
 	MailerURL string
 	LoggerURL string
