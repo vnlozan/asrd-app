@@ -1,63 +1,60 @@
 package main
 
 import (
-	"listener/internal/event"
+	"context"
+	"errors"
+	"listener/internal/config"
+	"listener/internal/infra/loggerclient"
+	"listener/internal/infra/rabbitmq"
+	"listener/internal/service/event"
 	"log"
-	"math"
 	"os"
-	"time"
-
-	amqp "github.com/rabbitmq/amqp091-go"
+	"os/signal"
+	"sync"
+	"syscall"
 )
 
 func main() {
-	rabbitConn, err := connect()
+	cfg := config.NewConfig()
+
+	// 1. Dial + defer закрытие
+	conn, err := rabbitmq.Dial(cfg.RabbitMQConfig.ConnectionURL)
 	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+		log.Fatalf("dial: %v", err)
 	}
-	defer rabbitConn.Close()
+	defer conn.Close()
 
-	log.Println("Listening fo and consuming RabbitMQ messages...")
-	consumer, err := event.NewConsumer(rabbitConn)
-	if err != nil {
-		panic(err)
+	// 2. Consumer ←→ handler
+	cons := rabbitmq.NewConsumer(conn)
+	if err := cons.SetupChannel(); err != nil {
+		log.Fatalf("declare exchange: %v", err)
 	}
 
-	err = consumer.Listen([]string{"log.INFO", "log.WARNING", "log.ERROR"})
-	if err != nil {
-		log.Println(err)
-	}
-}
+	logger := loggerclient.New(cfg.LoggerConfig.ConnectionURL)
+	h := event.NewLogHandler(logger)
 
-func connect() (*amqp.Connection, error) {
-	var counts int64 = 0
-	var backOff = 1 * time.Second
-	var connection *amqp.Connection = nil
+	// 3. Контекст, который закроется по Ctrl-C / docker stop
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	for {
-		c, err := amqp.Dial("amqp://guest:guest@rabbitmq")
-		if err == nil {
-			log.Println("Connected to RabbitMQ")
-			connection = c
-			break
+	// 4. Запускаем слушателя в отдельной горутине
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := cons.Listen(ctx,
+			[]string{"log.INFO", "log.WARNING", "log.ERROR"},
+			h.Handle,
+		); err != nil && !errors.Is(err, context.Canceled) {
+			log.Printf("listener error: %v", err)
 		}
+	}()
 
-		log.Println("RabbitMQ not yet ready...")
+	// 5. Ждём сигнала
+	<-ctx.Done()
+	log.Println("shutdown: context canceled")
 
-		if counts > 5 {
-			log.Println(err)
-			return nil, err
-		}
-
-		backOff = time.Duration(math.Pow(float64(counts), 2)) * time.Second
-		log.Println("backing off...")
-		time.Sleep(backOff)
-
-		counts++
-
-		continue
-	}
-
-	return connection, nil
+	// 6. Дожидаемся, пока consumer завершится
+	wg.Wait()
+	log.Println("graceful shutdown complete")
 }

@@ -93,8 +93,7 @@ func (s *BrokerService) SendMail(msg dto.MailPayload) error {
 }
 
 func (s *BrokerService) pushToQueue(name, msg string) error {
-	emitter := utils.NewEventEmitter(s.rabbitMQConnection)
-	err := emitter.SetupChannel()
+	err := s.eventEmitter.SetupChannel()
 	if err != nil {
 		return err
 	}
@@ -106,5 +105,5 @@ func (s *BrokerService) pushToQueue(name, msg string) error {
 
 	j, _ := json.MarshalIndent(&payload, "", "\t")
 
-	return emitter.PublishToChannel(string(j), "log.INFO")
+	return s.eventEmitter.Publish(string(j), "log.INFO")
 }
