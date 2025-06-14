@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -31,7 +32,7 @@ func (c *Consumer) SetupChannel() error {
 
 // Listen подписывается на topics и вызывает handler для каждого сообщения.
 // Метод блокирует текущую горутину, пока ctx не будет отменён.
-func (c *Consumer) Listen(ctx context.Context, topics []string, handler func(Payload)) error {
+func (c *Consumer) Listen(ctx context.Context, topics []string, handler func(context.Context, Payload) error) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return err
@@ -44,14 +45,8 @@ func (c *Consumer) Listen(ctx context.Context, topics []string, handler func(Pay
 	}
 
 	for _, rk := range topics {
-		if err = ch.QueueBind(
-			q.Name,
-			rk,
-			exchangeName,
-			false,
-			nil,
-		); err != nil {
-			return err
+		if err = ch.QueueBind(q.Name, rk, exchangeName, false, nil); err != nil {
+			return fmt.Errorf("queue bind %s: %w", rk, err)
 		}
 	}
 
@@ -77,7 +72,8 @@ func (c *Consumer) Listen(ctx context.Context, topics []string, handler func(Pay
 		case d := <-msgs:
 			var p Payload
 			if err := json.Unmarshal(d.Body, &p); err == nil {
-				go handler(p)
+				log.Printf("message received %v\n", p)
+				go handler(ctx, p)
 			}
 		}
 	}
