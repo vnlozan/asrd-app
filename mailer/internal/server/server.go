@@ -13,11 +13,11 @@ import (
 )
 
 type Server struct {
-	Config         config.Config
-	MailController controller.MailController
+	Config         *config.Config
+	MailController *controller.MailController
 }
 
-func NewServer(config config.Config, mailController controller.MailController) *Server {
+func NewServer(config *config.Config, mailController *controller.MailController) *Server {
 	return &Server{Config: config, MailController: mailController}
 }
 

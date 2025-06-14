@@ -11,14 +11,14 @@ type Mail struct {
 	FromName    string
 }
 
-type MailMessage struct {
+type SendMailMessageRequest struct {
 	From    string `json:"from"`
 	To      string `json:"to"`
 	Subject string `json:"subject"`
 	Message string `json:"message"`
 }
 
-type Message struct {
+type MailMessage struct {
 	From        string
 	FromName    string
 	To          string

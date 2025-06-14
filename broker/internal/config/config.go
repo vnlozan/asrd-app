@@ -2,23 +2,38 @@ package config
 
 import (
 	"broker/internal/utils"
-
-	"github.com/rabbitmq/amqp091-go"
 )
 
+type MailerConfig struct {
+	ConnectionURL string
+}
+
+type LoggerConfig struct {
+	ConnectionURL string
+}
+
+type AuthConfig struct {
+	ConnectionURL string
+}
+
+type RabbitMQConfig struct {
+	ConnectionURL string
+}
+
 type Config struct {
-	Rabbit    *amqp091.Connection
-	Port      string
-	MailerURL string
-	LoggerURL string
-	AuthURL   string
+	MailerConfig   *MailerConfig
+	LoggerConfig   *LoggerConfig
+	AuthConfig     *AuthConfig
+	RabbitMQConfig *RabbitMQConfig
+	Port           string
 }
 
 func NewConfig() *Config {
 	return &Config{
-		Port:      utils.String("PORT", "8080"),
-		MailerURL: utils.String("MAILER_URL", "http://mailer:8080"),
-		LoggerURL: utils.String("LOGGER_URL", "http://logger:8080"),
-		AuthURL:   utils.String("AUTH_URL", "http://auth:8080"),
+		Port:           utils.String("PORT", "8080"),
+		RabbitMQConfig: &RabbitMQConfig{ConnectionURL: utils.String("RABBITMQ_URL", "amqp://guest:guest@rabbitmq")},
+		MailerConfig:   &MailerConfig{ConnectionURL: utils.String("MAILER_URL", "http://mailer:8080")},
+		LoggerConfig:   &LoggerConfig{ConnectionURL: utils.String("LOGGER_URL", "http://logger:8080")},
+		AuthConfig:     &AuthConfig{ConnectionURL: utils.String("AUTH_URL", "http://auth:8080")},
 	}
 }

@@ -14,7 +14,6 @@ RUN CGO_ENABLED=0 go build -o . ./...
 FROM scratch
 
 COPY --from=builder /build/app .
-COPY /assets /assets
 
 EXPOSE 8080
 

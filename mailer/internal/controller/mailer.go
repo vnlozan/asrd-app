@@ -3,18 +3,23 @@ package controller
 import (
 	"log"
 	"mailer/internal/dto"
-	"mailer/internal/repo/client"
+	"mailer/internal/service"
 	"mailer/internal/utils"
 	"net/http"
 )
 
 type MailController struct {
-	Mailer client.IMailerClient
+	MailerService service.IMailerService
+}
+
+func NewMailController(mailerService service.IMailerService) *MailController {
+	return &MailController{
+		MailerService: mailerService,
+	}
 }
 
 func (m *MailController) SendMail(w http.ResponseWriter, r *http.Request) {
-
-	var requestPayload dto.MailMessage
+	var requestPayload dto.SendMailMessageRequest
 
 	err := utils.ReadJSON(w, r, &requestPayload)
 	if err != nil {
@@ -23,16 +28,15 @@ func (m *MailController) SendMail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := dto.Message{
+	msg := dto.MailMessage{
 		From:    requestPayload.From,
 		To:      requestPayload.To,
 		Subject: requestPayload.Subject,
 		Data:    requestPayload.Message,
 	}
 
-	err = m.Mailer.SendSMTPMessage(msg)
+	err = m.MailerService.SendMessage(msg)
 	if err != nil {
-		log.Println(err)
 		utils.ErrorJSON(w, err)
 		return
 	}

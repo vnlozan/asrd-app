@@ -50,7 +50,7 @@ func (s *Server) routes() http.Handler {
 	}))
 
 	mux.Use(middleware.Heartbeat("/ping"))
-	mux.Post("/log", s.LoggerController.WriteLog)
+	mux.Post("/log", s.LoggerController.AddOneLog)
 
 	return mux
 }

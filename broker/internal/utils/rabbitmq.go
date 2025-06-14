@@ -1,4 +1,4 @@
-package event
+package utils
 
 import (
 	"bytes"
@@ -10,33 +10,50 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+/* EVENT */
+func declareExchange(ch *amqp.Channel) error {
+	return ch.ExchangeDeclare(
+		"logs_topic", // name
+		"topic",      // type
+		true,         // durable?
+		false,        // auto-deleted?
+		false,        // internal?
+		false,        // no wait?
+		nil,          // arguments?
+	)
+}
+
+func declareRandomQueue(ch *amqp.Channel) (amqp.Queue, error) {
+	return ch.QueueDeclare(
+		"",    // name?
+		false, // durable?
+		false, // delete when unused?
+		true,  // exclusive?
+		false, // no wait?
+		nil,   // arguments?
+	)
+}
+
+/* CONSUMER */
+type Payload struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
 type Consumer struct {
 	rabbitMQConn *amqp.Connection
-	queueName    string
 }
 
-func NewConsumer(conn *amqp.Connection) (Consumer, error) {
-	consumer := Consumer{
-		rabbitMQConn: conn,
-	}
-	err := consumer.setup()
-	if err != nil {
-		return Consumer{}, err
-	}
-	return consumer, nil
+func NewConsumer(conn *amqp.Connection) *Consumer {
+	return &Consumer{rabbitMQConn: conn}
 }
 
-func (c *Consumer) setup() error {
+func (c *Consumer) SetupChannel() error {
 	channel, err := c.rabbitMQConn.Channel()
 	if err != nil {
 		return err
 	}
 	return declareExchange(channel)
-}
-
-type Payload struct {
-	Name string `json:"name"`
-	Data string `json:"data"`
 }
 
 func (c *Consumer) Listen(topics []string) error {
@@ -128,5 +145,49 @@ func logEvent(entry Payload) error {
 		return err
 	}
 
+	return nil
+}
+
+/* EMITTER */
+type Emitter struct {
+	connection *amqp.Connection
+}
+
+func NewEventEmitter(conn *amqp.Connection) *Emitter {
+	return &Emitter{connection: conn}
+}
+
+func (e *Emitter) SetupChannel() error {
+	channel, err := e.connection.Channel()
+	if err != nil {
+		return err
+	}
+	defer channel.Close()
+
+	return declareExchange(channel)
+}
+
+func (e *Emitter) PublishToChannel(event string, severity string) error {
+	channel, err := e.connection.Channel()
+	if err != nil {
+		return err
+	}
+	defer channel.Close()
+
+	log.Println("Pushing to channel")
+
+	err = channel.Publish(
+		"logs_topic",
+		severity,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(event),
+		},
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }

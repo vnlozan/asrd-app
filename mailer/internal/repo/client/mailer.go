@@ -24,9 +24,9 @@ type MailerClient struct {
 	FromAddress string
 }
 
-func NewMailerClient() MailerClient {
+func NewMailerClient(Domain string, Host string, Port int, Username string, Password string, Encryption string, FromName string, FromAddress string) IMailerClient {
 	port, _ := strconv.Atoi(os.Getenv("MAIL_PORT"))
-	m := MailerClient{
+	return &MailerClient{
 		Domain:      os.Getenv("MAIL_DOMAIN"),
 		Host:        os.Getenv("MAIL_HOST"),
 		Port:        port,
@@ -36,11 +36,9 @@ func NewMailerClient() MailerClient {
 		FromName:    os.Getenv("FROM_NAME"),
 		FromAddress: os.Getenv("FROM_ADDRESS"),
 	}
-
-	return m
 }
 
-func (m *MailerClient) SendSMTPMessage(msg dto.Message) error {
+func (m *MailerClient) SendSMTPMessage(msg dto.MailMessage) error {
 	if msg.From == "" {
 		msg.From = m.FromAddress
 	}
@@ -104,8 +102,8 @@ func (m *MailerClient) SendSMTPMessage(msg dto.Message) error {
 	return nil
 }
 
-func (m *MailerClient) buildHTMLMessage(msg dto.Message) (string, error) {
-	templateToRender := "./assets/templates/mail.html.gohtml"
+func (m *MailerClient) buildHTMLMessage(msg dto.MailMessage) (string, error) {
+	templateToRender := "./assets/templates/mail.html.gohtml" // todo constant
 
 	t, err := template.New("email-html").ParseFiles(templateToRender)
 	if err != nil {
@@ -126,8 +124,8 @@ func (m *MailerClient) buildHTMLMessage(msg dto.Message) (string, error) {
 	return formattedMessage, nil
 }
 
-func (m *MailerClient) buildPlainTextMessage(msg dto.Message) (string, error) {
-	templateToRender := "./assets/templates/mail.plain.gohtml"
+func (m *MailerClient) buildPlainTextMessage(msg dto.MailMessage) (string, error) {
+	templateToRender := "./assets/templates/mail.plain.gohtml" // TODO constant?
 
 	t, err := template.New("email-plain").ParseFiles(templateToRender)
 	if err != nil {

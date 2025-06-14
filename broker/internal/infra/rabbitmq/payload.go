@@ -1,6 +1,6 @@
-package dto
+package rabbitmq
 
-type JSONPayload struct {
+type Payload struct {
 	Name string `json:"name"`
 	Data string `json:"data"`
 }

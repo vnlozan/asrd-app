@@ -5,5 +5,5 @@ import (
 )
 
 type IMailerClient interface {
-	SendSMTPMessage(msg dto.Message) error
+	SendSMTPMessage(msg dto.MailMessage) error
 }

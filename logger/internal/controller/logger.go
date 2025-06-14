@@ -17,18 +17,18 @@ func NewLoggerController(loggerService service.ILoggerService) *LoggerController
 	}
 }
 
-func (c *LoggerController) WriteLog(w http.ResponseWriter, r *http.Request) {
+func (c *LoggerController) AddOneLog(w http.ResponseWriter, r *http.Request) {
 	var logEntry dto.LogEntry
-	_ = utils.ReadJSON(w, r, &logEntry)
+	if err := utils.ReadJSON(w, r, &logEntry); err != nil {
+		utils.ErrorJSON(w, err)
+		return
+	}
 
 	if err := c.loggerService.AddOneLog(logEntry); err != nil {
 		utils.ErrorJSON(w, err)
 		return
 	}
 
-	resp := utils.JsonResponse{
-		Error:   false,
-		Message: "logged",
-	}
+	resp := utils.JsonResponse{Error: false, Message: "logged"}
 	utils.WriteJSON(w, http.StatusAccepted, resp)
 }
